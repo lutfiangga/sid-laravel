@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Announcement Model
- * 
+ *
  * Represents a news article or announcement for the village.
  */
 class Announcement extends BaseModel
@@ -23,6 +23,7 @@ class Announcement extends BaseModel
         'title',
         'slug',
         'content',
+        'cover_image',
         'is_published',
         'author_id',
     ];

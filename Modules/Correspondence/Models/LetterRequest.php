@@ -15,31 +15,34 @@ use Modules\Population\Models\Penduduk;
 
 /**
  * LetterRequest Model
- * 
+ *
  * Represents a specific instance of a letter requested by a resident.
  */
 class LetterRequest extends BaseModel
 {
-    use HasFactory, SoftDeletes, HasWorkflow, HasApproval;
+    use HasApproval, HasFactory, HasWorkflow, SoftDeletes;
 
     protected $fillable = [
         'penduduk_id',
         'letter_type_id',
         'nomor_surat',
         'data',
+        'attachments',
         'workflow_status',
+        'rejection_reason',
         'current_official_id',
     ];
 
     protected $casts = [
         'data' => 'array',
+        'attachments' => 'array',
     ];
 
     protected static function boot()
     {
         parent::boot();
         static::creating(function ($model) {
-            if (!$model->workflow_status) {
+            if (! $model->workflow_status) {
                 $model->workflow_status = 'draft';
             }
         });

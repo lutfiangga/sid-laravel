@@ -13,3 +13,4 @@ require __DIR__.'/population.php';
 require __DIR__.'/correspondence.php';
 require __DIR__.'/public-service.php';
 require __DIR__.'/finance.php';
+require __DIR__.'/letter_template.php';

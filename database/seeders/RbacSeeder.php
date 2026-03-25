@@ -77,6 +77,7 @@ class RbacSeeder extends Seeder
         'RW',
         'HealthOfficer',
         'FinanceOfficer',
+        'Warga',
     ];
 
     /**
@@ -173,6 +174,16 @@ class RbacSeeder extends Seeder
                 $this->getPermissionsForActions(['finance', 'finance-period', 'finance-account', 'finance-budget', 'finance-transaction'], self::STANDARD_ACTIONS),
                 $this->getPermissionsForActions(['penduduk'], ['view']),
             )
+        );
+
+        // Warga gets scoped access: only their own letter requests & complaints, read-only announcements
+        $warga = Role::findByName('Warga');
+        $warga->syncPermissions(
+            $this->getPermissionsForActions(
+                ['letter-request', 'complaint'],
+                ['view', 'create', 'delete']
+            ) +
+            $this->getPermissionsForActions(['announcement'], ['view'])
         );
     }
 

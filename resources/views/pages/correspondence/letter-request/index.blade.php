@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Modules\Correspondence\Models\LetterRequest;
 use Modules\Correspondence\Services\LetterRequestService;
+use Modules\Population\Models\Penduduk;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,8 +32,19 @@ new class extends Component {
     #[Computed]
     public function letterRequests()
     {
+        $filters = [];
+
+        // Scope to own requests if the user has the Warga role
+        if (Auth::user()->hasRole('Warga')) {
+            $penduduk = Penduduk::where('user_id', Auth::id())->first();
+            if ($penduduk) {
+                $filters['penduduk_id'] = $penduduk->id;
+            }
+        }
+
         return app(LetterRequestService::class)->getPaginated(
             search: $this->search,
+            filters: $filters,
             perPage: 10
         );
     }
@@ -54,9 +67,11 @@ new class extends Component {
                 <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari nomor surat/status...') }}" icon="magnifying-glass" />
             </div>
 
+            @unless(auth()->user()->hasRole('Warga'))
             <flux:button wire:click="export" icon="arrow-down-tray">
                 {{ __('Export CSV') }}
             </flux:button>
+            @endunless
         </div>
 
             <flux:table :paginate="$this->letterRequests">

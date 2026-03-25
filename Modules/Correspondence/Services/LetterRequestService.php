@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Modules\Correspondence\Services;
 
 use App\Core\Base\BaseCrudService;
+use Illuminate\Support\Facades\Auth;
 use Modules\Correspondence\Models\WorkflowLog;
 use Modules\Correspondence\Repositories\LetterRequestRepository;
-use Illuminate\Support\Facades\Auth;
 
 class LetterRequestService extends BaseCrudService
 {
@@ -22,11 +22,11 @@ class LetterRequestService extends BaseCrudService
     public function submitRequest(string $requestId, ?string $note = null): bool
     {
         $request = $this->repository->find($requestId);
-        if (!$request) {
+        if (! $request) {
             return false;
         }
 
-        if (!$request->canTransitionTo('submitted')) {
+        if (! $request->canTransitionTo('submitted')) {
             return false;
         }
 
@@ -49,33 +49,54 @@ class LetterRequestService extends BaseCrudService
     public function approveRequest(string $requestId, ?string $note = null): bool
     {
         $request = $this->repository->find($requestId);
-        if (!$request) {
+        if (! $request || ! $request->type) {
             return false;
         }
 
-        // Determine next status based on current status and user role
-        // This is a simplified logic for initial implementation
-        $nextStatus = 'approved'; 
-        
-        // If RT approves, maybe next is RW
-        // If RW approves, maybe next is Admin
-        // For now, let's keep it simple or follow the trait's transitions
+        $levels = $request->type->approval_levels ?? [];
+        $currentStatus = $request->workflow_status;
 
-        if ($request->workflow_status === 'submitted') {
-            $nextStatus = 'rt_review';
-        } elseif ($request->workflow_status === 'rt_review') {
-            $nextStatus = 'rw_review';
-        } elseif ($request->workflow_status === 'rw_review') {
-            $nextStatus = 'admin_review';
-        } elseif ($request->workflow_status === 'admin_review') {
+        // Map status to level codes
+        $statusToLevel = [
+            'submitted' => null, // Beginning
+            'rt_review' => 'rt',
+            'rw_review' => 'rw',
+            'lurah_review' => 'lurah',
+            'admin_review' => 'admin',
+        ];
+
+        $currentLevelCode = $statusToLevel[$currentStatus] ?? null;
+
+        // Find index of current level (or -1 if just submitted)
+        $currentIndex = -1;
+        if ($currentLevelCode) {
+            $currentIndex = array_search($currentLevelCode, $levels);
+        }
+
+        // Determine next level
+        $nextIndex = $currentIndex + 1;
+
+        if (isset($levels[$nextIndex])) {
+            $nextLevelCode = $levels[$nextIndex];
+            $nextStatus = match ($nextLevelCode) {
+                'rt' => 'rt_review',
+                'rw' => 'rw_review',
+                'lurah' => 'lurah_review',
+                'admin' => 'admin_review',
+                default => 'approved',
+            };
+        } else {
+            // No more levels, final approval
             $nextStatus = 'approved';
-            // Generate nomor surat here if needed
-            if (!$request->nomor_surat) {
+        }
+
+        if ($nextStatus === 'approved') {
+            if (! $request->nomor_surat) {
                 $request->nomor_surat = $this->generateNomorSurat($request);
             }
         }
 
-        if (!$request->canTransitionTo($nextStatus)) {
+        if (! $request->canTransitionTo($nextStatus)) {
             return false;
         }
 
@@ -100,7 +121,7 @@ class LetterRequestService extends BaseCrudService
         $count = $this->repository->getModel()::whereYear('created_at', now()->year)
             ->whereNotNull('nomor_surat')
             ->count() + 1;
-            
-        return sprintf("%03d/%s/%s/%d", $count, $request->type->kode, 'PEM-DS', now()->year);
+
+        return sprintf('%03d/%s/%s/%d', $count, $request->type->kode, 'PEM-DS', now()->year);
     }
 }

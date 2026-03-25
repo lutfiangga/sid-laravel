@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Livewire\Component;
 use Livewire\WithPagination;
 use Modules\PublicService\Services\ComplaintService;
+use Modules\Population\Models\Penduduk;
 use Livewire\Attributes\Computed;
+use Illuminate\Support\Facades\Auth;
 
 new class extends Component {
     use WithPagination;
@@ -53,6 +55,14 @@ new class extends Component {
             $filters['status'] = $this->statusFilter;
         }
 
+        // Scope to own complaints if the user has the Warga role
+        if (Auth::user()->hasRole('Warga')) {
+            $penduduk = Penduduk::where('user_id', Auth::id())->first();
+            if ($penduduk) {
+                $filters['penduduk_id'] = $penduduk->id;
+            }
+        }
+
         return app(ComplaintService::class)->getPaginated(
             filters: $filters,
             search: $this->search,
@@ -77,9 +87,11 @@ new class extends Component {
             <div class="w-1/3">
                 <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari pengaduan...') }}" icon="magnifying-glass" />
             </div>
+            @unless(auth()->user()->hasRole('Warga'))
             <flux:button wire:click="export" icon="arrow-down-tray" class="ml-auto">
                 {{ __('Export CSV') }}
             </flux:button>
+            @endunless
         
             <div class="w-1/4">
                 <flux:select wire:model.live="statusFilter" placeholder="{{ __('Semua Status') }}">

@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Modules\Population\Models;
 
 use App\Core\Base\BaseModel;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Penduduk extends BaseModel
 {
     use HasFactory;
+
     protected $table = 'penduduks';
 
     protected $fillable = [
         'kartu_keluarga_id',
+        'user_id',
         'nik',
         'nama',
         'tempat_lahir',
@@ -56,5 +59,13 @@ class Penduduk extends BaseModel
     public function kartuKeluarga(): BelongsTo
     {
         return $this->belongsTo(KartuKeluarga::class, 'kartu_keluarga_id', 'id');
+    }
+
+    /**
+     * The user account linked to this resident.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

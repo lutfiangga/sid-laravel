@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * LetterType Model
- * 
+ *
  * Represents a document template (e.g. SKTM, SKU).
  */
 class LetterType extends BaseModel
@@ -23,10 +23,13 @@ class LetterType extends BaseModel
         'kode',
         'template',
         'requirement_list',
+        'approval_levels',
+        'letter_template_id',
     ];
 
     protected $casts = [
         'requirement_list' => 'array',
+        'approval_levels' => 'array',
     ];
 
     /**

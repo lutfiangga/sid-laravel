@@ -7,6 +7,7 @@ namespace Modules\Correspondence\Policies;
 use App\Core\Base\BasePolicy;
 use App\Models\User;
 use Modules\Correspondence\Models\LetterRequest;
+use Modules\Population\Models\Penduduk;
 
 class LetterRequestPolicy extends BasePolicy
 {
@@ -16,26 +17,48 @@ class LetterRequestPolicy extends BasePolicy
     }
 
     /**
-     * Residents can view their own requests.
+     * Warga can only view their own requests. Staff can view all.
      */
     public function view(mixed $user, mixed $model): bool
     {
-        // If has role official, can view based on permission
-        if ($user->hasRole(['SuperAdmin', 'VillageAdmin', 'Kades', 'Sekdes'])) {
+        if (! $user instanceof User || ! $model instanceof LetterRequest) {
+            return false;
+        }
+
+        if ($user->hasRole('SuperAdmin')) {
             return true;
         }
 
-        // If RT/RW, should check if the resident is in their area (simplified for now)
-        if ($user->hasRole(['Rt', 'Rw'])) {
-            return true;
+        if ($user->hasRole('Warga')) {
+            /** @var ?Penduduk $penduduk */
+            $penduduk = Penduduk::where('user_id', $user->id)->first();
+
+            return $penduduk && $model->penduduk_id === $penduduk->id;
         }
 
-        // If resident, check if it's their own
-        // (Assuming User has a resident_id or similar, or just check policy)
         return parent::view($user, $model);
     }
-    
+
     /**
-     * Logic for approval can be added here as custom permissions.
+     * Warga can delete only their own requests (when still draft).
      */
+    public function delete(mixed $user, mixed $model): bool
+    {
+        if (! $user instanceof User || ! $model instanceof LetterRequest) {
+            return false;
+        }
+
+        if ($user->hasRole('SuperAdmin')) {
+            return true;
+        }
+
+        if ($user->hasRole('Warga')) {
+            /** @var ?Penduduk $penduduk */
+            $penduduk = Penduduk::where('user_id', $user->id)->first();
+
+            return $penduduk && $model->penduduk_id === $penduduk->id && $model->workflow_status === 'draft';
+        }
+
+        return parent::delete($user, $model);
+    }
 }

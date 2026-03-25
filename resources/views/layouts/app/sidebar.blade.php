@@ -70,6 +70,11 @@
                         {{ __('Kategori Surat') }}
                     </flux:sidebar.item>
                     @endcan
+                    @can('viewAny', \Modules\LetterTemplate\Models\LetterTemplate::class)
+                    <flux:sidebar.item icon="document-duplicate" :href="route('letter-template.index')" :current="request()->routeIs('letter-template.*')" wire:navigate>
+                        {{ __('Templat Surat') }}
+                    </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
                 @endcanany
 

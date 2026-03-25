@@ -15,13 +15,11 @@ Direktori `app/Core` berisi logika dasar yang digunakan oleh seluruh modul. Ini 
 Setiap fitur besar dipisahkan ke dalam modulnya masing-masing di direktori `Modules/`. Struktur tipikal sebuah modul adalah:
 
 ```text
-Modules/Population/
-├── Contracts/       # Interface khusus modul (Repositories/Services)
-├── Models/          # Eloquent Models
-├── Policies/        # Aturan otorisas (Spatie/Laravel Policies)
-├── Repositories/    # Implementasi akses data (Entity-specific)
-├── Services/        # Business logic dan workflow
-└── Providers/       # Binding Service Provider (Interface to Implementation)
+Modules/LetterTemplate/
+├── Models/          # LetterTemplate with A4 meta
+├── Repositories/    # Templated data access
+├── Services/        # Content parsing & placeholders
+└── HTTP/Livewire/   # Advanced TinyMCE form
 ```
 
 ## 3. Workflow Data (Data Flow)
