@@ -50,7 +50,7 @@ new #[Title('Form RW')] class extends Component {
     }
 }; ?>
 
-<section class="max-w-2xl">
+<section class="w-full">
     <div class="mb-6">
         <flux:heading size="xl">{{ $rw ? __('Edit RW') : __('Tambah RW') }}</flux:heading>
         <flux:subheading>{{ __('Lengkapi informasi detail RW di bawah ini.') }}</flux:subheading>

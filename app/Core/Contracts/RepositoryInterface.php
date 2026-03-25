@@ -27,6 +27,17 @@ interface RepositoryInterface
 
     /**
      * Get paginated models.
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  array<int, string>  $with
      */
-    public function paginate(int $perPage = 15): LengthAwarePaginator;
+    public function paginate(int $perPage = 15, string $search = '', array $filters = [], array $with = []): LengthAwarePaginator;
+
+    /**
+     * Get results for export.
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  array<int, string>  $with
+     */
+    public function export(string $search = '', array $filters = [], array $with = []): Collection;
 }

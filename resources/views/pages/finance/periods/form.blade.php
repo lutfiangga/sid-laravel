@@ -48,36 +48,37 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
-                    {{ $period ? __('Edit Tahun Anggaran') : __('Tambah Tahun Anggaran') }}
-                </h2>
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                    {{ __('Pastikan hanya ada satu tahun anggaran yang aktif dalam satu waktu.') }}
-                </p>
+<div class="w-full">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
+            {{ $period ? __('Edit Tahun Anggaran') : __('Tambah Tahun Anggaran') }}
+        </h2>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+            {{ __('Pastikan hanya ada satu tahun anggaran yang aktif dalam satu waktu.') }}
+        </p>
+    </div>
+    <flux:card>
+
+        <form wire:submit="save" class="space-y-6">
+            <flux:input wire:model="year" type="number" step="1" label="{{ __('Tahun') }}" placeholder="e.g. 2026"
+                required />
+
+            <flux:input wire:model="description" label="{{ __('Keterangan (Opsional)') }}"
+                placeholder="APBD Desa Tahun 2026" />
+
+            <div class="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/30">
+                <flux:switch wire:model="is_active" label="{{ __('Set sebagai Tahun Berjalan Aktif') }}"
+                    description="{{ __('Mengaktifkan tahun ini akan otomatis menonaktifkan tahun lainnya.') }}" />
             </div>
 
-            <form wire:submit="save" class="space-y-6">
-                <flux:input wire:model="year" type="number" step="1" label="{{ __('Tahun') }}" placeholder="e.g. 2026" required />
-                
-                <flux:input wire:model="description" label="{{ __('Keterangan (Opsional)') }}" placeholder="APBD Desa Tahun 2026" />
-                
-                <div class="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/30">
-                    <flux:switch wire:model="is_active" label="{{ __('Set sebagai Tahun Berjalan Aktif') }}" description="{{ __('Mengaktifkan tahun ini akan otomatis menonaktifkan tahun lainnya.') }}" />
-                </div>
-
-                <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
-                    <flux:button href="{{ route('finance.periods.index') }}" variant="ghost" wire:navigate>
-                        {{ __('Batal') }}
-                    </flux:button>
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Simpan') }}
-                    </flux:button>
-                </div>
-            </form>
-        </flux:card>
-    </div>
+            <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
+                <flux:button href="{{ route('finance.periods.index') }}" variant="ghost" wire:navigate>
+                    {{ __('Batal') }}
+                </flux:button>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Simpan') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:card>
 </div>

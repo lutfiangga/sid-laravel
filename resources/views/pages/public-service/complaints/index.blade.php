@@ -23,6 +23,28 @@ new class extends Component {
         $this->resetPage();
     }
 
+    
+    public function export(ComplaintService $service)
+    {
+        $data = $service->export(search: $this->search);
+        
+        if ($data->isEmpty()) {
+            $this->dispatch('notify', message: __('Tidak ada data untuk diekspor.'));
+            return;
+        }
+
+        $firstItem = collect($data->first()->toArray())->except(['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by', 'password', 'remember_token'])->toArray();
+        $columns = [];
+        foreach (array_keys($firstItem) as $key) {
+            if (!is_array($firstItem[$key])) {
+                $columns[$key] = ucwords(str_replace('_', ' ', $key));
+            }
+        }
+
+        return \App\Core\Support\Exporter::csv($data, $columns, 'export-' . now()->format('Y-m-d') . '.csv');
+    }
+
+
     #[Computed]
     public function complaints()
     {
@@ -39,85 +61,78 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6 flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">{{ __('Pengaduan Warga') }}</h2>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Daftar aspirasi dan keluhan dari masyarakat.') }}</p>
-                </div>
-                <flux:button href="{{ route('public-service.complaints.create') }}" variant="primary" icon="plus" wire:navigate>
-                    {{ __('Buat Pengaduan') }}
-                </flux:button>
-            </div>
-
-            <div class="mb-4 flex gap-4">
-                <div class="w-1/3">
-                    <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari pengaduan...') }}" icon="magnifying-glass" />
-                </div>
-                <div class="w-1/4">
-                    <flux:select wire:model.live="statusFilter" placeholder="{{ __('Semua Status') }}">
-                        <flux:select.option value="">{{ __('Semua Status') }}</flux:select.option>
-                        <flux:select.option value="pending">{{ __('Menunggu (Pending)') }}</flux:select.option>
-                        <flux:select.option value="in_progress">{{ __('Diproses') }}</flux:select.option>
-                        <flux:select.option value="resolved">{{ __('Selesai (Resolved)') }}</flux:select.option>
-                        <flux:select.option value="rejected">{{ __('Ditolak (Rejected)') }}</flux:select.option>
-                    </flux:select>
-                </div>
-            </div>
-
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-                    <thead class="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">{{ __('Tanggal') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Pelapor') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Judul Pengaduan') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Status') }}</th>
-                            <th scope="col" class="px-6 py-3 text-right">{{ __('Aksi') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @forelse ($this->complaints as $complaint)
-                            <tr class="bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/50">
-                                <td class="px-6 py-4 text-xs">{{ $complaint->created_at->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                                    {{ $complaint->penduduk->nama ?? __('Anonim/Dihapus') }}
-                                </td>
-                                <td class="px-6 py-4">{{ Str::limit($complaint->title, 40) }}</td>
-                                <td class="px-6 py-4">
-                                    @php
-                                        $statusColors = [
-                                            'pending' => 'zinc',
-                                            'in_progress' => 'blue',
-                                            'resolved' => 'emerald',
-                                            'rejected' => 'red',
-                                        ];
-                                        $color = $statusColors[$complaint->status] ?? 'zinc';
-                                    @endphp
-                                    <flux:badge color="{{ $color }}" size="sm" class="uppercase">
-                                        {{ str_replace('_', ' ', $complaint->status) }}
-                                    </flux:badge>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <flux:button href="{{ route('public-service.complaints.detail', $complaint->id) }}" size="sm" variant="ghost" icon="eye" wire:navigate />
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-zinc-500">
-                                    {{ __('Tidak ada data pengaduan.') }}
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $this->complaints->links() }}
-            </div>
-        </flux:card>
+<section class="w-full">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <flux:heading size="xl">{{ __('Pengaduan Warga') }}</flux:heading>
+            <flux:subheading>{{ __('Daftar aspirasi dan keluhan dari masyarakat.') }}</flux:subheading>
+        </div>
+        <flux:button href="{{ route('public-service.complaints.create') }}" variant="primary" icon="plus" wire:navigate>
+            {{ __('Buat Pengaduan') }}
+        </flux:button>
     </div>
-</div>
+
+    <flux:card>
+        <div class="mb-4 flex gap-4">
+            <div class="w-1/3">
+                <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari pengaduan...') }}" icon="magnifying-glass" />
+            </div>
+            <flux:button wire:click="export" icon="arrow-down-tray" class="ml-auto">
+                {{ __('Export CSV') }}
+            </flux:button>
+        
+            <div class="w-1/4">
+                <flux:select wire:model.live="statusFilter" placeholder="{{ __('Semua Status') }}">
+                    <flux:select.option value="">{{ __('Semua Status') }}</flux:select.option>
+                    <flux:select.option value="pending">{{ __('Menunggu (Pending)') }}</flux:select.option>
+                    <flux:select.option value="in_progress">{{ __('Diproses') }}</flux:select.option>
+                    <flux:select.option value="resolved">{{ __('Selesai (Resolved)') }}</flux:select.option>
+                    <flux:select.option value="rejected">{{ __('Ditolak (Rejected)') }}</flux:select.option>
+                </flux:select>
+            </div>
+        </div>
+
+        <flux:table :paginate="$this->complaints">
+            <flux:table.columns>
+                <flux:table.column>{{ __('Tanggal') }}</flux:table.column>
+                <flux:table.column>{{ __('Pelapor') }}</flux:table.column>
+                <flux:table.column>{{ __('Judul Pengaduan') }}</flux:table.column>
+                <flux:table.column>{{ __('Status') }}</flux:table.column>
+                <flux:table.column align="right">{{ __('Aksi') }}</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach ($this->complaints as $complaint)
+                    <flux:table.row :key="$complaint->id">
+                        <flux:table.cell class="text-xs">{{ $complaint->created_at->format('d/m/Y H:i') }}</flux:table.cell>
+
+                        <flux:table.cell class="font-medium text-zinc-900 dark:text-white">
+                            {{ $complaint->penduduk->nama ?? __('Anonim/Dihapus') }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>{{ Str::limit($complaint->title, 40) }}</flux:table.cell>
+
+                        <flux:table.cell>
+                            @php
+                                $statusColors = [
+                                    'pending' => 'zinc',
+                                    'in_progress' => 'blue',
+                                    'resolved' => 'emerald',
+                                    'rejected' => 'red',
+                                ];
+                                $color = $statusColors[$complaint->status] ?? 'zinc';
+                            @endphp
+                            <flux:badge color="{{ $color }}" size="sm" class="uppercase" inset="top bottom">
+                                {{ str_replace('_', ' ', $complaint->status) }}
+                            </flux:badge>
+                        </flux:table.cell>
+
+                        <flux:table.cell align="right">
+                            <flux:button href="{{ route('public-service.complaints.detail', $complaint->id) }}" size="sm" variant="ghost" icon="eye" wire:navigate inset="top bottom" />
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    </flux:card>
+</section>

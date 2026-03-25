@@ -25,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        // Use compact pagination style by default
+        \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.compact');
+
         // Implicitly grant "SuperAdmin" role all permissions
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
             return $user->hasRole('SuperAdmin') ? true : null;

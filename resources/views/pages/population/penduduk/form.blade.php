@@ -76,7 +76,7 @@ new #[Title('Form Penduduk')] class extends Component {
     }
 }; ?>
 
-<section class="max-w-4xl">
+<section class="w-full">
     <div class="mb-6">
         <flux:heading size="xl">{{ $penduduk ? __('Edit Penduduk') : __('Tambah Penduduk') }}</flux:heading>
         <flux:subheading>{{ __('Lengkapi data biografi penduduk di bawah ini.') }}</flux:subheading>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Base;
 
+use App\Core\Traits\HasSearch;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 abstract class BaseModel extends Model
 {
-    use HasUuids, LogsActivity, SoftDeletes;
+    use HasSearch, HasUuids, LogsActivity, SoftDeletes;
 
     /**
      * The attributes that aren't mass assignable.

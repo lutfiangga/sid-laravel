@@ -83,61 +83,61 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
-                    {{ $transaction ? __('Edit Transaksi') : __('Catat Transaksi Baru') }}
-                </h2>
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                    {{ __('Pencatatan realisasi penerimaan, belanja, atau pembiayaan desa.') }}
-                </p>
-            </div>
+<div class="w-full">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
+            {{ $transaction ? __('Edit Transaksi') : __('Catat Transaksi Baru') }}
+        </h2>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+            {{ __('Pencatatan realisasi penerimaan, belanja, atau pembiayaan desa.') }}
+        </p>
+    </div>
+    <flux:card>
 
-            <form wire:submit="save" class="space-y-6">
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <flux:select wire:model="finance_period_id" label="{{ __('Tahun Anggaran') }}" required>
-                        <flux:select.option value="" disabled>{{ __('Pilih Tahun') }}</flux:select.option>
-                        @foreach($this->periods as $period)
-                            <flux:select.option value="{{ $period->id }}">
-                                {{ $period->year }} {{ $period->is_active ? '(Aktif)' : '' }}
-                            </flux:select.option>
-                        @endforeach
-                    </flux:select>
+        <form wire:submit="save" class="space-y-6">
 
-                    <flux:input wire:model="transaction_date" type="date" label="{{ __('Tanggal Transaksi') }}" required />
-                </div>
-                
-                <flux:radio.group wire:model.live="type" label="{{ __('Jenis Transaksi') }}" class="flex gap-4">
-                    <flux:radio value="pemasukan" label="{{ __('Pemasukan') }}" />
-                    <flux:radio value="pengeluaran" label="{{ __('Pengeluaran') }}" />
-                    <flux:radio value="pembiayaan" label="{{ __('Pembiayaan') }}" />
-                </flux:radio.group>
-
-                <flux:select wire:model="finance_account_id" label="{{ __('Akun (Kode Rekening)') }}" required search>
-                    <flux:select.option value="" disabled>{{ __('Pilih Akun') }}</flux:select.option>
-                    @foreach($this->accounts as $account)
-                        <flux:select.option value="{{ $account->id }}">
-                            {{ $account->code }} - {{ $account->name }}
-                        </flux:select.option>
+            <div class="grid grid-cols-2 gap-4">
+                <flux:select wire:model="finance_period_id" label="{{ __('Tahun Anggaran') }}" required>
+                    <flux:select.option value="" disabled>{{ __('Pilih Tahun') }}</flux:select.option>
+                    @foreach($this->periods as $period)
+                    <flux:select.option value="{{ $period->id }}">
+                        {{ $period->year }} {{ $period->is_active ? '(Aktif)' : '' }}
+                    </flux:select.option>
                     @endforeach
                 </flux:select>
-                
-                <flux:input wire:model="amount" type="number" step="0.01" label="{{ __('Nilai Transaksi (Rp)') }}" placeholder="0.00" required />
-                
-                <flux:textarea wire:model="description" label="{{ __('Uraian / Keterangan Pembayaran') }}" rows="3" required />
 
-                <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
-                    <flux:button href="{{ route('finance.transactions.index') }}" variant="ghost" wire:navigate>
-                        {{ __('Batal') }}
-                    </flux:button>
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Simpan') }}
-                    </flux:button>
-                </div>
-            </form>
-        </flux:card>
-    </div>
+                <flux:input wire:model="transaction_date" type="date" label="{{ __('Tanggal Transaksi') }}" required />
+            </div>
+
+            <flux:radio.group wire:model.live="type" label="{{ __('Jenis Transaksi') }}" class="flex gap-4">
+                <flux:radio value="pemasukan" label="{{ __('Pemasukan') }}" />
+                <flux:radio value="pengeluaran" label="{{ __('Pengeluaran') }}" />
+                <flux:radio value="pembiayaan" label="{{ __('Pembiayaan') }}" />
+            </flux:radio.group>
+
+            <flux:select wire:model="finance_account_id" label="{{ __('Akun (Kode Rekening)') }}" required search>
+                <flux:select.option value="" disabled>{{ __('Pilih Akun') }}</flux:select.option>
+                @foreach($this->accounts as $account)
+                <flux:select.option value="{{ $account->id }}">
+                    {{ $account->code }} - {{ $account->name }}
+                </flux:select.option>
+                @endforeach
+            </flux:select>
+
+            <flux:input wire:model="amount" type="number" step="0.01" label="{{ __('Nilai Transaksi (Rp)') }}"
+                placeholder="0.00" required />
+
+            <flux:textarea wire:model="description" label="{{ __('Uraian / Keterangan Pembayaran') }}" rows="3"
+                required />
+
+            <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
+                <flux:button href="{{ route('finance.transactions.index') }}" variant="ghost" wire:navigate>
+                    {{ __('Batal') }}
+                </flux:button>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Simpan') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:card>
 </div>

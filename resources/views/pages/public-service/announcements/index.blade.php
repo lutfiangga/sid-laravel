@@ -17,6 +17,19 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function export(AnnouncementService $service)
+    {
+        $data = $service->export(search: $this->search, with: ['author']);
+
+        return \App\Core\Support\Exporter::csv($data, [
+            'created_at' => 'Tanggal',
+            'title' => 'Judul',
+            'author.name' => 'Penulis',
+            'is_published' => 'Dipublikasikan (1/0)',
+            'published_at' => 'Waktu Publikasi',
+        ], 'data-pengumuman-' . now()->format('Y-m-d') . '.csv');
+    }
+
     #[Computed]
     public function announcements()
     {
@@ -39,74 +52,71 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6 flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">{{ __('Pengumuman & Berita') }}</h2>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelola artikel berita dan pengumuman warga.') }}</p>
-                </div>
-                <flux:button href="{{ route('public-service.announcements.create') }}" variant="primary" icon="plus" wire:navigate>
-                    {{ __('Publikasi Baru') }}
-                </flux:button>
-            </div>
+<section class="w-full">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <flux:heading size="xl">{{ __('Pengumuman & Berita') }}</flux:heading>
+            <flux:subheading>{{ __('Kelola artikel berita dan pengumuman warga.') }}</flux:subheading>
+        </div>
+        <flux:button href="{{ route('public-service.announcements.create') }}" variant="primary" icon="plus" wire:navigate>
+            {{ __('Publikasi Baru') }}
+        </flux:button>
+    </div>
 
-            <div class="mb-4">
+    <flux:card>
+        <div class="mb-4 flex items-center justify-between gap-4">
+            <div class="w-full max-w-sm">
                 <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari judul...') }}" icon="magnifying-glass" />
             </div>
 
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-                    <thead class="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">{{ __('Judul') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Penulis') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Tanggal Publikasi') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Status Publikasi') }}</th>
-                            <th scope="col" class="px-6 py-3 text-right">{{ __('Aksi') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @forelse ($this->announcements as $item)
-                            <tr class="bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/50">
-                                <td class="px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                                    {{ $item->title }}
-                                </td>
-                                <td class="px-6 py-4">{{ $item->author->name ?? '-' }}</td>
-                                <td class="px-6 py-4 text-xs">{{ $item->created_at->format('d M Y H:i') }}</td>
-                                <td class="px-6 py-4">
-                                    <button wire:click="togglePublish('{{ $item->id }}', {{ $item->is_published ? 'true' : 'false' }})" class="focus:outline-none focus:ring-2 focus:ring-zinc-500 rounded-sm">
-                                        @if($item->is_published)
-                                            <flux:badge color="emerald" size="sm" icon="check-circle">{{ __('Published') }}</flux:badge>
-                                        @else
-                                            <flux:badge color="zinc" size="sm" icon="eye-slash">{{ __('Draft') }}</flux:badge>
-                                        @endif
-                                    </button>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-2">
-                                        <flux:button href="{{ route('public-service.announcements.edit', $item->id) }}" size="sm" variant="ghost" icon="pencil-square" wire:navigate />
-                                        <flux:button wire:click="delete('{{ $item->id }}')" 
-                                            wire:confirm="{{ __('Yakin menghapus publikasi ini?') }}"
-                                            size="sm" variant="ghost" color="danger" icon="trash" />
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-zinc-500">
-                                    {{ __('Tidak ada pengumuman.') }}
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            <flux:button wire:click="export" icon="arrow-down-tray">
+                {{ __('Export CSV') }}
+            </flux:button>
+        </div>
 
-            <div class="mt-4">
-                {{ $this->announcements->links() }}
-            </div>
-        </flux:card>
-    </div>
-</div>
+        <flux:table :paginate="$this->announcements">
+            <flux:table.columns>
+                <flux:table.column>{{ __('Judul') }}</flux:table.column>
+                <flux:table.column>{{ __('Penulis') }}</flux:table.column>
+                <flux:table.column>{{ __('Tanggal') }}</flux:table.column>
+                <flux:table.column>{{ __('Status') }}</flux:table.column>
+                <flux:table.column align="right">{{ __('Aksi') }}</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach ($this->announcements as $item)
+                    <flux:table.row :key="$item->id">
+                        <flux:table.cell class="font-medium text-zinc-900 dark:text-white">
+                            {{ $item->title }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>{{ $item->author->name ?? '-' }}</flux:table.cell>
+
+                        <flux:table.cell class="text-xs">{{ $item->created_at->format('d M Y') }}</flux:table.cell>
+
+                        <flux:table.cell>
+                            <flux:button wire:click="togglePublish('{{ $item->id }}', {{ $item->is_published ? 'true' : 'false' }})" variant="ghost" size="sm" inset="top bottom">
+                                @if($item->is_published)
+                                    <flux:badge color="emerald" size="sm" icon="check-circle">{{ __('Published') }}</flux:badge>
+                                @else
+                                    <flux:badge color="zinc" size="sm" icon="eye-slash">{{ __('Draft') }}</flux:badge>
+                                @endif
+                            </flux:button>
+                        </flux:table.cell>
+
+                        <flux:table.cell align="right">
+                            <flux:dropdown>
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
+
+                                <flux:menu>
+                                    <flux:menu.item icon="pencil-square" href="{{ route('public-service.announcements.edit', $item->id) }}" wire:navigate>{{ __('Edit') }}</flux:menu.item>
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="delete('{{ $item->id }}')" wire:confirm="{{ __('Yakin menghapus publikasi ini?') }}">{{ __('Hapus') }}</flux:menu.item>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    </flux:card>
+</section>

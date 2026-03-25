@@ -43,6 +43,14 @@ abstract class BaseCrudService extends BaseService implements BaseCrudServiceInt
     }
 
     /**
+     * Get records for export.
+     */
+    public function export(string $search = '', array $filters = [], array $with = []): Collection
+    {
+        return $this->repository->export($search, $filters, $with);
+    }
+
+    /**
      * Create a new record.
      *
      * @param  array<string, mixed>  $data

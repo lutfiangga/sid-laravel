@@ -17,7 +17,7 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->letter_types = app(LetterTypeService::class)->all()->pluck('nama', 'id')->toArray();
+        $this->letter_types = app(LetterTypeService::class)->getAll()->pluck('nama', 'id')->toArray();
     }
 
     public function updatedLetterTypeId($value): void

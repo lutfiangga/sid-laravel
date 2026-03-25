@@ -52,7 +52,7 @@ new #[Title('Form Kartu Keluarga')] class extends Component {
     }
 }; ?>
 
-<section class="max-w-2xl">
+<section class="w-full">
     <div class="mb-6">
         <flux:heading size="xl">{{ $kartuKeluarga ? __('Edit Kartu Keluarga') : __('Tambah Kartu Keluarga') }}</flux:heading>
         <flux:subheading>{{ __('Lengkapi informasi detail kartu keluarga di bawah ini.') }}</flux:subheading>

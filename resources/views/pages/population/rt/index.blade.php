@@ -19,6 +19,29 @@ new #[Title('Data RT')] class extends Component {
         $this->dispatch('rt-deleted');
     }
 
+    
+    public function export(RtServiceInterface $service)
+    {
+        $data = $service->export(search: $this->search);
+        
+        if ($data->isEmpty()) {
+            $this->dispatch('notify', message: __('Tidak ada data untuk diekspor.'));
+            return;
+        }
+
+        // Extract column names dynamically from the first item's array representation
+        $firstItem = collect($data->first()->toArray())->except(['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by'])->toArray();
+        $columns = [];
+        foreach (array_keys($firstItem) as $key) {
+            if (!is_array($firstItem[$key])) {
+                $columns[$key] = ucwords(str_replace('_', ' ', $key));
+            }
+        }
+
+        return \App\Core\Support\Exporter::csv($data, $columns, 'export-' . now()->format('Y-m-d') . '.csv');
+    }
+
+
     #[Computed]
     public function rts()
     {
@@ -42,48 +65,47 @@ new #[Title('Data RT')] class extends Component {
             <div class="w-full max-w-sm">
                 <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari RT...') }}" icon="magnifying-glass" />
             </div>
+            <flux:button wire:click="export" icon="arrow-down-tray" class="ml-auto">
+                {{ __('Export CSV') }}
+            </flux:button>
+        
         </div>
 
-        <div class="relative overflow-x-auto">
-            <table class="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-                <thead class="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">{{ __('Nomor RT') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('RW') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('Dusun') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('Ketua RT') }}</th>
-                        <th scope="col" class="px-6 py-3 text-right">{{ __('Aksi') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @forelse ($this->rts as $rt)
-                        <tr class="bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/50">
-                            <td class="whitespace-nowrap px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                                {{ $rt->nomor }}
-                            </td>
-                            <td class="px-6 py-4">{{ $rt->rw->nomor ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $rt->rw->dusun->nama ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $rt->ketua ?? '-' }}</td>
-                            <td class="whitespace-nowrap px-6 py-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <flux:button size="sm" variant="ghost" icon="pencil-square" href="{{ route('population.rt.edit', $rt->id) }}" />
-                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete('{{ $rt->id }}')" wire:confirm="{{ __('Apakah Anda yakin ingin menghapus RT ini?') }}" />
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-zinc-500">
-                                {{ __('Tidak ada data RT ditemukan.') }}
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <flux:table :paginate="$this->rts">
+            <flux:table.columns>
+                <flux:table.column>{{ __('Nomor RT') }}</flux:table.column>
+                <flux:table.column>{{ __('RW') }}</flux:table.column>
+                <flux:table.column>{{ __('Dusun') }}</flux:table.column>
+                <flux:table.column>{{ __('Ketua RT') }}</flux:table.column>
+                <flux:table.column align="right">{{ __('Aksi') }}</flux:table.column>
+            </flux:table.columns>
 
-        <div class="mt-4">
-            {{ $this->rts->links() }}
-        </div>
+            <flux:table.rows>
+                @foreach ($this->rts as $rt)
+                    <flux:table.row :key="$rt->id">
+                        <flux:table.cell class="font-medium text-zinc-900 dark:text-white">
+                            {{ $rt->nomor }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>{{ $rt->rw->nomor ?? '-' }}</flux:table.cell>
+
+                        <flux:table.cell>{{ $rt->rw->dusun->nama ?? '-' }}</flux:table.cell>
+
+                        <flux:table.cell>{{ $rt->ketua ?? '-' }}</flux:table.cell>
+
+                        <flux:table.cell align="right">
+                            <flux:dropdown>
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
+
+                                <flux:menu>
+                                    <flux:menu.item icon="pencil-square" href="{{ route('population.rt.edit', $rt->id) }}" wire:navigate>{{ __('Edit') }}</flux:menu.item>
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="delete('{{ $rt->id }}')" wire:confirm="{{ __('Apakah Anda yakin ingin menghapus RT ini?') }}">{{ __('Hapus') }}</flux:menu.item>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
     </flux:card>
 </section>

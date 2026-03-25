@@ -11,6 +11,28 @@ use Illuminate\Support\Facades\Auth;
 new class extends Component {
     use WithPagination;
 
+    
+    public function export(LetterRequestService $service)
+    {
+        $data = $service->export(search: $this->search);
+        
+        if ($data->isEmpty()) {
+            $this->dispatch('notify', message: __('Tidak ada data untuk diekspor.'));
+            return;
+        }
+
+        $firstItem = collect($data->first()->toArray())->except(['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by', 'password', 'remember_token'])->toArray();
+        $columns = [];
+        foreach (array_keys($firstItem) as $key) {
+            if (!is_array($firstItem[$key])) {
+                $columns[$key] = ucwords(str_replace('_', ' ', $key));
+            }
+        }
+
+        return \App\Core\Support\Exporter::csv($data, $columns, 'export-' . now()->format('Y-m-d') . '.csv');
+    }
+
+
     #[Computed]
     public function pendingRequests()
     {
@@ -23,59 +45,50 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">{{ __('Kotak Masuk Persetujuan') }}</h2>
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Daftar permohonan surat yang memerlukan tindakan Anda.') }}</p>
-            </div>
-
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-                    <thead class="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">{{ __('Tanggal') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Pemohon') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Jenis Surat') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Status Saat Ini') }}</th>
-                            <th scope="col" class="px-6 py-3 text-right">{{ __('Aksi') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @forelse ($this->pendingRequests as $request)
-                            <tr class="bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/50">
-                                <td class="px-6 py-4">{{ $request->created_at->diffForHumans() }}</td>
-                                <td class="px-6 py-4">
-                                    <div class="font-medium text-zinc-900 dark:text-white">{{ $request->penduduk->nama }}</div>
-                                    <div class="text-xs text-zinc-400">{{ $request->penduduk->nik }}</div>
-                                </td>
-                                <td class="px-6 py-4">{{ $request->type->nama }}</td>
-                                <td class="px-6 py-4">
-                                    <flux:badge variant="neutral" size="sm" class="uppercase">
-                                        {{ str_replace('_', ' ', $request->workflow_status) }}
-                                    </flux:badge>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <flux:button href="{{ route('correspondence.letter-request.detail', $request->id) }}" variant="primary" size="sm">
-                                        {{ __('Tinjau') }}
-                                    </flux:button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-zinc-500">
-                                    {{ __('Hore! Tidak ada permohonan yang tertunda.') }}
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $this->pendingRequests->links() }}
-            </div>
-        </flux:card>
+<section class="w-full">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <flux:heading size="xl">{{ __('Kotak Masuk Persetujuan') }}</flux:heading>
+            <flux:subheading>{{ __('Daftar permohonan surat yang memerlukan tindakan Anda.') }}</flux:subheading>
+        </div>
     </div>
-</div>
+
+    <flux:card>
+        <flux:table :paginate="$this->pendingRequests">
+            <flux:table.columns>
+                <flux:table.column>{{ __('Tanggal') }}</flux:table.column>
+                <flux:table.column>{{ __('Pemohon') }}</flux:table.column>
+                <flux:table.column>{{ __('Jenis Surat') }}</flux:table.column>
+                <flux:table.column>{{ __('Status Saat Ini') }}</flux:table.column>
+                <flux:table.column align="right">{{ __('Aksi') }}</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach ($this->pendingRequests as $request)
+                    <flux:table.row :key="$request->id">
+                        <flux:table.cell>{{ $request->created_at->diffForHumans() }}</flux:table.cell>
+
+                        <flux:table.cell>
+                            <div class="font-medium text-zinc-900 dark:text-white">{{ $request->penduduk->nama }}</div>
+                            <div class="text-xs text-zinc-400">{{ $request->penduduk->nik }}</div>
+                        </flux:table.cell>
+
+                        <flux:table.cell>{{ $request->type->nama }}</flux:table.cell>
+
+                        <flux:table.cell>
+                            <flux:badge variant="neutral" size="sm" class="uppercase" inset="top bottom">
+                                {{ str_replace('_', ' ', $request->workflow_status) }}
+                            </flux:badge>
+                        </flux:table.cell>
+
+                        <flux:table.cell align="right">
+                            <flux:button href="{{ route('correspondence.letter-request.detail', $request->id) }}" variant="primary" size="sm" inset="top bottom">
+                                {{ __('Tinjau') }}
+                            </flux:button>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    </flux:card>
+</section>

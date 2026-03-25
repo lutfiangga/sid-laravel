@@ -12,6 +12,28 @@ new class extends Component {
 
     public string $search = '';
 
+    
+    public function export(LetterTypeService $service)
+    {
+        $data = $service->export(search: $this->search);
+        
+        if ($data->isEmpty()) {
+            $this->dispatch('notify', message: __('Tidak ada data untuk diekspor.'));
+            return;
+        }
+
+        $firstItem = collect($data->first()->toArray())->except(['id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by', 'deleted_by', 'password', 'remember_token'])->toArray();
+        $columns = [];
+        foreach (array_keys($firstItem) as $key) {
+            if (!is_array($firstItem[$key])) {
+                $columns[$key] = ucwords(str_replace('_', ' ', $key));
+            }
+        }
+
+        return \App\Core\Support\Exporter::csv($data, $columns, 'export-' . now()->format('Y-m-d') . '.csv');
+    }
+
+
     #[Computed]
     public function letterTypes()
     {
@@ -28,74 +50,70 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6 flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">{{ __('Kategori Surat') }}</h2>
-                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ __('Kelola template surat dan persyaratan dokumen.') }}</p>
-                </div>
-                <flux:button href="{{ route('correspondence.letter-type.create') }}" variant="primary" icon="plus">
-                    {{ __('Tambah Kategori') }}
-                </flux:button>
-            </div>
+<section class="w-full">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <flux:heading size="xl">{{ __('Kategori Surat') }}</flux:heading>
+            <flux:subheading>{{ __('Kelola template surat dan persyaratan dokumen.') }}</flux:subheading>
+        </div>
+        <flux:button href="{{ route('correspondence.letter-type.create') }}" variant="primary" icon="plus">
+            {{ __('Tambah Kategori') }}
+        </flux:button>
+    </div>
 
-            <div class="mb-4">
+    <flux:card>
+        <div class="mb-4 flex items-center gap-4">
+            <div class="w-full max-w-sm">
                 <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari kategori/kode...') }}" icon="magnifying-glass" />
             </div>
+            <flux:button wire:click="export" icon="arrow-down-tray" class="ml-auto">
+                {{ __('Export CSV') }}
+            </flux:button>
+        
+        </div>
 
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-                    <thead class="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">{{ __('Kode') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Nama Kategori') }}</th>
-                            <th scope="col" class="px-6 py-3">{{ __('Persyaratan') }}</th>
-                            <th scope="col" class="px-6 py-3 text-right">{{ __('Aksi') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                        @forelse ($this->letterTypes as $type)
-                            <tr class="bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/50">
-                                <td class="whitespace-nowrap px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                                    {{ $type->kode }}
-                                </td>
-                                <td class="px-6 py-4">{{ $type->nama }}</td>
-                                <td class="px-6 py-4 text-xs">
-                                    @if($type->requirement_list)
-                                        <ul class="list-disc pl-4">
-                                            @foreach($type->requirement_list as $req)
-                                                <li>{{ $req }}</li>
-                                            @endforeach
-                                        </ul>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-2">
-                                        <flux:button href="{{ route('correspondence.letter-type.edit', $type->id) }}" size="sm" variant="ghost" icon="pencil-square" />
-                                        <flux:button wire:click="delete('{{ $type->id }}')" 
-                                            wire:confirm="{{ __('Apakah Anda yakin ingin menghapus kategori ini?') }}"
-                                            size="sm" variant="ghost" color="danger" icon="trash" />
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-zinc-500">
-                                    {{ __('Tidak ada data ditemukan.') }}
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <flux:table :paginate="$this->letterTypes">
+            <flux:table.columns>
+                <flux:table.column>{{ __('Kode') }}</flux:table.column>
+                <flux:table.column>{{ __('Nama Kategori') }}</flux:table.column>
+                <flux:table.column>{{ __('Persyaratan') }}</flux:table.column>
+                <flux:table.column align="right">{{ __('Aksi') }}</flux:table.column>
+            </flux:table.columns>
 
-            <div class="mt-4">
-                {{ $this->letterTypes->links() }}
-            </div>
-        </flux:card>
-    </div>
-</div>
+            <flux:table.rows>
+                @foreach ($this->letterTypes as $type)
+                    <flux:table.row :key="$type->id">
+                        <flux:table.cell class="font-medium text-zinc-900 dark:text-white">
+                            {{ $type->kode }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>{{ $type->nama }}</flux:table.cell>
+
+                        <flux:table.cell>
+                            @if($type->requirement_list)
+                                <ul class="list-disc pl-4 text-xs">
+                                    @foreach($type->requirement_list as $req)
+                                        <li>{{ $req }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                -
+                            @endif
+                        </flux:table.cell>
+
+                        <flux:table.cell align="right">
+                            <flux:dropdown>
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
+
+                                <flux:menu>
+                                    <flux:menu.item icon="pencil-square" href="{{ route('correspondence.letter-type.edit', $type->id) }}" wire:navigate>{{ __('Edit') }}</flux:menu.item>
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="delete('{{ $type->id }}')" wire:confirm="{{ __('Apakah Anda yakin ingin menghapus kategori ini?') }}">{{ __('Hapus') }}</flux:menu.item>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    </flux:card>
+</section>

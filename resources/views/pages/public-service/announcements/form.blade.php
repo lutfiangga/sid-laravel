@@ -63,17 +63,16 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-4xl sm:px-6 lg:px-8">
+    <div class="w-full">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
+                {{ $announcement ? __('Edit Pengumuman') : __('Tulis Pengumuman Baru') }}
+            </h2>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                {{ __('Bagikan informasi penting ke seluruh warga desa.') }}
+            </p>
+        </div>
         <flux:card>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
-                    {{ $announcement ? __('Edit Pengumuman') : __('Tulis Pengumuman Baru') }}
-                </h2>
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                    {{ __('Bagikan informasi penting ke seluruh warga desa.') }}
-                </p>
-            </div>
 
             <form wire:submit="save" class="space-y-6">
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -96,4 +95,3 @@ new class extends Component {
             </form>
         </flux:card>
     </div>
-</div>

@@ -19,6 +19,24 @@ new #[Title('Data Penduduk')] class extends Component {
         $this->dispatch('penduduk-deleted');
     }
 
+    public function export(PendudukServiceInterface $service)
+    {
+        $data = $service->export(search: $this->search, with: ['kartuKeluarga']);
+
+        return \App\Core\Support\Exporter::csv($data, [
+            'nik' => 'NIK',
+            'nama' => 'Nama Lengkap',
+            'jenis_kelamin' => 'Jenis Kelamin',
+            'tempat_lahir' => 'Tempat Lahir',
+            'tanggal_lahir' => 'Tanggal Lahir',
+            'agama' => 'Agama',
+            'status_perkawinan' => 'Status Perkawinan',
+            'pekerjaan' => 'Pekerjaan',
+            'status' => 'Status',
+            'kartuKeluarga.nomor_kk' => 'No. KK',
+        ], 'data-penduduk-' . now()->format('Y-m-d') . '.csv');
+    }
+
     #[Computed]
     public function penduduks()
     {
@@ -38,63 +56,66 @@ new #[Title('Data Penduduk')] class extends Component {
     </div>
 
     <flux:card>
-        <div class="mb-4 flex items-center gap-4">
+        <div class="mb-4 flex items-center justify-between gap-4">
             <div class="w-full max-w-sm">
                 <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Cari NIK / Nama...') }}" icon="magnifying-glass" />
             </div>
+
+            <flux:button wire:click="export" icon="arrow-down-tray">
+                {{ __('Export CSV') }}
+            </flux:button>
         </div>
 
-        <div class="relative overflow-x-auto">
-            <table class="w-full text-left text-sm text-zinc-500 dark:text-zinc-400">
-                <thead class="bg-zinc-50 text-xs uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">{{ __('NIK') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('Nama Lengkap') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('No. KK') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('Jenis Kelamin') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('Wilayah') }}</th>
-                        <th scope="col" class="px-6 py-3">{{ __('Status') }}</th>
-                        <th scope="col" class="px-6 py-3 text-right">{{ __('Aksi') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @forelse ($this->penduduks as $penduduk)
-                        <tr class="bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/50">
-                            <td class="whitespace-nowrap px-6 py-4 font-medium text-zinc-900 dark:text-white">
-                                {{ $penduduk->nik }}
-                            </td>
-                            <td class="px-6 py-4">{{ $penduduk->nama }}</td>
-                            <td class="px-6 py-4">{{ $penduduk->kartuKeluarga->nomor_kk ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $penduduk->jenis_kelamin }}</td>
-                            <td class="px-6 py-4 text-xs">
+        <flux:table :paginate="$this->penduduks">
+            <flux:table.columns>
+                <flux:table.column>{{ __('NIK') }}</flux:table.column>
+                <flux:table.column>{{ __('Nama Lengkap') }}</flux:table.column>
+                <flux:table.column>{{ __('No. KK') }}</flux:table.column>
+                <flux:table.column>{{ __('Jenis Kelamin') }}</flux:table.column>
+                <flux:table.column>{{ __('Wilayah') }}</flux:table.column>
+                <flux:table.column>{{ __('Status') }}</flux:table.column>
+                <flux:table.column align="right">{{ __('Aksi') }}</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach ($this->penduduks as $penduduk)
+                    <flux:table.row :key="$penduduk->id">
+                        <flux:table.cell class="font-medium text-zinc-900 dark:text-white">
+                            {{ $penduduk->nik }}
+                        </flux:table.cell>
+
+                        <flux:table.cell>{{ $penduduk->nama }}</flux:table.cell>
+
+                        <flux:table.cell>{{ $penduduk->kartuKeluarga->nomor_kk ?? '-' }}</flux:table.cell>
+
+                        <flux:table.cell>{{ $penduduk->jenis_kelamin }}</flux:table.cell>
+
+                        <flux:table.cell>
+                            <div class="text-xs">
                                 RT {{ $penduduk->kartuKeluarga->rt->nomor ?? '' }} / RW {{ $penduduk->kartuKeluarga->rt->rw->nomor ?? '' }}<br>
                                 {{ $penduduk->kartuKeluarga->rt->rw->dusun->nama ?? '' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <flux:badge variant="{{ $penduduk->status === 'Aktif' ? 'success' : 'neutral' }}" size="sm">
-                                    {{ $penduduk->status }}
-                                </flux:badge>
-                            </td>
-                            <td class="whitespace-nowrap px-6 py-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <flux:button size="sm" variant="ghost" icon="pencil-square" href="{{ route('population.penduduk.edit', $penduduk->id) }}" />
-                                    <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete('{{ $penduduk->id }}')" wire:confirm="{{ __('Apakah Anda yakin ingin menghapus penduduk ini?') }}" />
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-zinc-500">
-                                {{ __('Tidak ada data penduduk ditemukan.') }}
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            </div>
+                        </flux:table.cell>
 
-        <div class="mt-4">
-            {{ $this->penduduks->links() }}
-        </div>
+                        <flux:table.cell>
+                            <flux:badge variant="{{ $penduduk->status === 'Aktif' ? 'success' : 'neutral' }}" size="sm" inset="top bottom">
+                                {{ $penduduk->status }}
+                            </flux:badge>
+                        </flux:table.cell>
+
+                        <flux:table.cell align="right">
+                            <flux:dropdown>
+                                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" inset="top bottom" />
+
+                                <flux:menu>
+                                    <flux:menu.item icon="pencil-square" href="{{ route('population.penduduk.edit', $penduduk->id) }}" wire:navigate>{{ __('Edit') }}</flux:menu.item>
+                                    <flux:menu.item icon="trash" variant="danger" wire:click="delete('{{ $penduduk->id }}')" wire:confirm="{{ __('Apakah Anda yakin ingin menghapus penduduk ini?') }}">{{ __('Hapus') }}</flux:menu.item>
+                                </flux:menu>
+                            </flux:dropdown>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
     </flux:card>
 </section>

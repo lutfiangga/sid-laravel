@@ -80,50 +80,49 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
-                    {{ $budget ? __('Edit Pagu Anggaran') : __('Buat Pagu Anggaran Baru') }}
-                </h2>
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                    {{ __('Tetapkan nilai RAB untuk suatu akun pada tahun anggaran tertentu.') }}
-                </p>
-            </div>
-
-            <form wire:submit="save" class="space-y-6">
-                <flux:select wire:model="finance_period_id" label="{{ __('Tahun Anggaran') }}" required>
-                    <flux:select.option value="" disabled>{{ __('Pilih Tahun') }}</flux:select.option>
-                    @foreach($this->periods as $period)
-                        <flux:select.option value="{{ $period->id }}">
-                            {{ $period->year }} {{ $period->is_active ? '(Aktif)' : '' }}
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
-
-                <flux:select wire:model="finance_account_id" label="{{ __('Akun (Kode Rekening)') }}" required search>
-                    <flux:select.option value="" disabled>{{ __('Pilih Akun') }}</flux:select.option>
-                    @foreach($this->accounts as $account)
-                        <flux:select.option value="{{ $account->id }}">
-                            {{ $account->code }} - {{ $account->name }} ({{ strtoupper($account->type) }})
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
-                
-                <flux:input wire:model="amount" type="number" step="0.01" label="{{ __('Jumlah (Rp)') }}" placeholder="0.00" required />
-                
-                <flux:textarea wire:model="notes" label="{{ __('Catatan (Opsional)') }}" rows="3" />
-
-                <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
-                    <flux:button href="{{ route('finance.budgets.index') }}" variant="ghost" wire:navigate>
-                        {{ __('Batal') }}
-                    </flux:button>
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Simpan') }}
-                    </flux:button>
-                </div>
-            </form>
-        </flux:card>
+<div class="w-full">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
+            {{ $budget ? __('Edit Pagu Anggaran') : __('Buat Pagu Anggaran Baru') }}
+        </h2>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+            {{ __('Tetapkan nilai RAB untuk suatu akun pada tahun anggaran tertentu.') }}
+        </p>
     </div>
+    <flux:card>
+
+        <form wire:submit="save" class="space-y-6">
+            <flux:select wire:model="finance_period_id" label="{{ __('Tahun Anggaran') }}" required>
+                <flux:select.option value="" disabled>{{ __('Pilih Tahun') }}</flux:select.option>
+                @foreach($this->periods as $period)
+                <flux:select.option value="{{ $period->id }}">
+                    {{ $period->year }} {{ $period->is_active ? '(Aktif)' : '' }}
+                </flux:select.option>
+                @endforeach
+            </flux:select>
+
+            <flux:select wire:model="finance_account_id" label="{{ __('Akun (Kode Rekening)') }}" required search>
+                <flux:select.option value="" disabled>{{ __('Pilih Akun') }}</flux:select.option>
+                @foreach($this->accounts as $account)
+                <flux:select.option value="{{ $account->id }}">
+                    {{ $account->code }} - {{ $account->name }} ({{ strtoupper($account->type) }})
+                </flux:select.option>
+                @endforeach
+            </flux:select>
+
+            <flux:input wire:model="amount" type="number" step="0.01" label="{{ __('Jumlah (Rp)') }}" placeholder="0.00"
+                required />
+
+            <flux:textarea wire:model="notes" label="{{ __('Catatan (Opsional)') }}" rows="3" />
+
+            <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
+                <flux:button href="{{ route('finance.budgets.index') }}" variant="ghost" wire:navigate>
+                    {{ __('Batal') }}
+                </flux:button>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Simpan') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:card>
 </div>

@@ -50,7 +50,7 @@ new #[Title('Form RT')] class extends Component {
     }
 }; ?>
 
-<section class="max-w-2xl">
+<section class="w-full">
     <div class="mb-6">
         <flux:heading size="xl">{{ $rt ? __('Edit RT') : __('Tambah RT') }}</flux:heading>
         <flux:subheading>{{ __('Lengkapi informasi detail RT di bawah ini.') }}</flux:subheading>

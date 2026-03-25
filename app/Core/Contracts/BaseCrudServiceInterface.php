@@ -28,6 +28,13 @@ interface BaseCrudServiceInterface
     public function getPaginated(int $perPage = 15, string $search = '', array $filters = [], array $with = []): LengthAwarePaginator;
 
     /**
+     * Get records for export.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function export(string $search = '', array $filters = [], array $with = []): Collection;
+
+    /**
      * Create a new record.
      *
      * @param  array<string, mixed>  $data

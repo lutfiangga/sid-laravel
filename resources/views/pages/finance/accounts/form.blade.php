@@ -49,40 +49,39 @@ new class extends Component {
     }
 }; ?>
 
-<div class="py-12">
-    <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
-        <flux:card>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
-                    {{ $account ? __('Edit Mata Anggaran') : __('Tambah Mata Anggaran Baru') }}
-                </h2>
-                <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                    {{ __('Kode rekening mengacu pada standar bagan akun APBDes.') }}
-                </p>
-            </div>
-
-            <form wire:submit="save" class="space-y-6">
-                <flux:input wire:model="code" label="{{ __('Kode Rekening') }}" placeholder="e.g. 4.1.1.01" required />
-                
-                <flux:input wire:model="name" label="{{ __('Uraian / Nama Rekening') }}" placeholder="e.g. Hasil Usaha Desa" required />
-                
-                <flux:radio.group wire:model="type" label="{{ __('Tipe Akun') }}" class="flex gap-4">
-                    <flux:radio value="pemasukan" label="{{ __('Pemasukan') }}" />
-                    <flux:radio value="pengeluaran" label="{{ __('Pengeluaran') }}" />
-                    <flux:radio value="pembiayaan" label="{{ __('Pembiayaan') }}" />
-                </flux:radio.group>
-
-                <flux:switch wire:model="is_active" label="{{ __('Status Aktif') }}" />
-
-                <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
-                    <flux:button href="{{ route('finance.accounts.index') }}" variant="ghost" wire:navigate>
-                        {{ __('Batal') }}
-                    </flux:button>
-                    <flux:button type="submit" variant="primary">
-                        {{ __('Simpan') }}
-                    </flux:button>
-                </div>
-            </form>
-        </flux:card>
+<div class="w-full">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-zinc-800 dark:text-white">
+            {{ $account ? __('Edit Mata Anggaran') : __('Tambah Mata Anggaran Baru') }}
+        </h2>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+            {{ __('Kode rekening mengacu pada standar bagan akun APBDes.') }}
+        </p>
     </div>
+    <flux:card>
+
+        <form wire:submit="save" class="space-y-6">
+            <flux:input wire:model="code" label="{{ __('Kode Rekening') }}" placeholder="e.g. 4.1.1.01" required />
+
+            <flux:input wire:model="name" label="{{ __('Uraian / Nama Rekening') }}" placeholder="e.g. Hasil Usaha Desa"
+                required />
+
+            <flux:radio.group wire:model="type" label="{{ __('Tipe Akun') }}" class="flex gap-4">
+                <flux:radio value="pemasukan" label="{{ __('Pemasukan') }}" />
+                <flux:radio value="pengeluaran" label="{{ __('Pengeluaran') }}" />
+                <flux:radio value="pembiayaan" label="{{ __('Pembiayaan') }}" />
+            </flux:radio.group>
+
+            <flux:switch wire:model="is_active" label="{{ __('Status Aktif') }}" />
+
+            <div class="flex justify-end gap-3 border-t pt-6 dark:border-zinc-700">
+                <flux:button href="{{ route('finance.accounts.index') }}" variant="ghost" wire:navigate>
+                    {{ __('Batal') }}
+                </flux:button>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Simpan') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:card>
 </div>

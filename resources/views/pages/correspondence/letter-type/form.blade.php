@@ -95,7 +95,7 @@ new class extends Component {
                     <flux:label>{{ __('Persyaratan Dokumen') }}</flux:label>
                     <div class="flex gap-2">
                         <flux:input wire:model="new_requirement" placeholder="{{ __('Tambah persyaratan e.g. Fotokopi KTP') }}" wire:keydown.enter.prevent="addRequirement" />
-                        <flux:button wire:click.prevent="addRequirement" variant="secondary" icon="plus" />
+                        <flux:button wire:click.prevent="addRequirement" variant="subtle" icon="plus" />
                     </div>
 
                     @if($requirement_list)

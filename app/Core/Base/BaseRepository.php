@@ -57,10 +57,54 @@ abstract class BaseRepository implements RepositoryInterface
 
     /**
      * Get paginated models.
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  array<int, string>  $with
      */
-    public function paginate(int $perPage = 15): LengthAwarePaginator
+    public function paginate(int $perPage = 15, string $search = '', array $filters = [], array $with = []): LengthAwarePaginator
     {
-        return $this->newQuery()->latest()->paginate($perPage);
+        return $this->applyCriteria($search, $filters, $with)
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    /**
+     * Get results for export.
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  array<int, string>  $with
+     */
+    public function export(string $search = '', array $filters = [], array $with = []): Collection
+    {
+        return $this->applyCriteria($search, $filters, $with)
+            ->latest()
+            ->get();
+    }
+
+    /**
+     * Apply common criteria to query.
+     */
+    protected function applyCriteria(string $search = '', array $filters = [], array $with = []): Builder
+    {
+        $query = $this->newQuery()->with($with);
+
+        foreach ($filters as $column => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $query->whereIn($column, $value);
+            } else {
+                $query->where($column, $value);
+            }
+        }
+
+        if ($search && method_exists($this->model, 'scopeSearch')) {
+            $query->search($search);
+        }
+
+        return $query;
     }
 
     /**
